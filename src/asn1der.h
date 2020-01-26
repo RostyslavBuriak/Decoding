@@ -21,16 +21,19 @@ class decoder{
         void decode64(const char * ,char * cipherT = nullptr, char * Other = nullptr);
 
     private:
-        int quad(int,int);
+        //Calculates number in power
+        int pow(int,int);
 
-        void CalculateIndentifierByte();
-
+        //Calculates all decimal values of indentifier
         void CalculateIndentifier(int);
 
+        //Calculates first byte of indentifier which is decoded to two values
         void CalculateIndentifierFirstByte();
 
+        //Convert byte array to decimal value
         int CalculateBytes(int);
 
+        //Decoding encoded ans1.der string
         void ParseData();
 
         char * Append(char *,char *);

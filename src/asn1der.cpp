@@ -86,22 +86,22 @@ int decoder::ParseLength(int num){
 }
 
 
-int decoder::quad(int num, int times){
+int decoder::pow(int num, int times){
     if(times == 0)
         return 1;
     if(times == 1)
         return 2;
     if(times > 1)
-        return num*quad(num,--times);
+        return num*pow(num,--times);
 }
 
 
 int decoder::CalculateBytes(int len){
-    int calculated = 0,power = len*8;
+    int calculated = 0,power = len*8-1;
     for(int i = 0;i < len && ++pArr;i++){
         for(int q = 7;q >= 0;--q){
             if(CHECKBIT(*pArr,q)){
-                calculated += quad(2,power-1);
+                calculated += pow(2,power);
             }
             --power;
         }
@@ -129,12 +129,8 @@ void decoder::CalculateIndentifierFirstByte(){ //there are only three types of f
 }
 
 
-void decoder::CalculateIndentifierByte(){
-
-}
-
-
 void decoder::CalculateIndentifier(int len){
+    CalculateIndentifierFirstByte();
     for(int i = 0; i<len && ++pArr ; i++){
         if(!CHECKBIT(*pArr,7)){ //if decimal number consists of only one byte
             Result = Append(Result,const_cast<char *>((std::to_string(*pArr) + ".").c_str()));
@@ -160,9 +156,7 @@ void decoder::CalculateIndentifier(int len){
 void decoder::ObjectIndentifierHandler(){
     Result = Append(Result,const_cast<char *>("OBJECT INDENTIFIED WITH VALUE: { "));
     if(!CHECKBIT(*++pArr,7)){ //if length in one byte
-        int length = *pArr;
-        CalculateIndentifierFirstByte();
-        CalculateIndentifier(length-1);
+        CalculateIndentifier(*pArr-1);
     }
     else //behaviour not described
     {
@@ -175,7 +169,7 @@ void decoder::ObjectIndentifierHandler(){
 void decoder::IntegerHandler(){
      if(!CHECKBIT(*++pArr,7)){
         Result = Append(Result,const_cast<char *>("INTEGER WITH VALUE: { "));
-        Result = Append(Result, const_cast<char *>((std::to_string(CalculateBytes(ParseLength(*++pArr)))+ " ").c_str()));
+        Result = Append(Result, const_cast<char *>((std::to_string(CalculateBytes(ParseLength(*pArr)))+ " ").c_str()));
     }
     else
     {
