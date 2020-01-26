@@ -1,4 +1,4 @@
-#include <iostream>
+#i#include <iostream>
 #include "string.h"
 
 #define ENDOFARRAY -1
@@ -36,31 +36,39 @@ class decoder{
         //Decoding encoded ans1.der string
         void ParseData();
 
+        //Appends passed array with new array
         char * Append(char *,char *);
 
+        //Decodes length of front bytes
         int ParseLength(int);
 
+        //Handles Object Indentifier
         void ObjectIndentifierHandler();
 
+        //Handles Integer
         void IntegerHandler();
 
+        //Handles Sequance
         void SequanceHandler();
 
+        //Converts char array to int array
         void ToIntArray();
 
+        //Copies value of passed array and returns new created one with same values
         const unsigned char *  NewArr(const unsigned char* );
 
+        //Byte array as integers
         int * IntByteArray = nullptr;
 
+        //Pointer to IntByteArray which is used to move through array
         int * pArr = nullptr;
 
+        //Byte array as char
         const unsigned char * CharByteArray = nullptr;
 
+        //The result decoded string
         char * Result = new char[1]{};
 
-        char * cipherT = nullptr;
-
-        char * Other = nullptr;
-
+        //Size of IntByteArray
         int size = 0;
 };
