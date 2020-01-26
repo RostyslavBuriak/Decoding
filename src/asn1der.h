@@ -1,4 +1,4 @@
-#i#include <iostream>
+#include <iostream>
 #include "string.h"
 
 #define ENDOFARRAY -1
