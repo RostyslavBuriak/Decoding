@@ -8,6 +8,7 @@
 #define OBJECT_IDENTIFIER 0x06
 #define SEQUENCE 0x30
 
+#define SETBIT(number,bit) ((number) |= (pow(2,bit)))
 #define CHECKBIT(number,bit) ((number) & (1 << (bit)))
  
 class decoder{
@@ -16,7 +17,7 @@ class decoder{
 
         ~decoder();
 
-        char * decode(const unsigned char * ,char * cipherT = nullptr, char * Other = nullptr);
+        char * decode(const unsigned char * ,int,char * cipherT = nullptr, char * Other = nullptr);
 
         void decode64(const char * ,char * cipherT = nullptr, char * Other = nullptr);
 
@@ -24,11 +25,17 @@ class decoder{
         //Calculates number in power
         int pow(int,int);
 
+        char* IntToHexChar(int);
+
+        void AppendOctetString(int);
+
+        int CalculateLongSID(int&);
+
         //Calculates all decimal values of indentifier
-        void CalculateIndentifier(int);
+        void CalculateIdentifier(int);
 
         //Calculates first byte of indentifier which is decoded to two values
-        void CalculateIndentifierFirstByte();
+        void CalculateIdentifierFirstByte();
 
         //Convert byte array to decimal value
         int CalculateBytes(int);
@@ -42,14 +49,17 @@ class decoder{
         //Decodes length of front bytes
         int ParseLength(int);
 
+        //Handles Octet String
+        void OctetStringHandler();
+
         //Handles Object Indentifier
-        void ObjectIndentifierHandler();
+        void ObjectIdentifierHandler();
 
         //Handles Integer
         void IntegerHandler();
 
         //Handles Sequance
-        void SequanceHandler();
+        void SequenceHandler();
 
         //Converts char array to int array
         void ToIntArray();
