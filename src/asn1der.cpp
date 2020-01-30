@@ -9,11 +9,22 @@ decoder::decoder(){
 }
 
 decoder::decoder(const decoder& obj){
-    this->CharByteArray = obj.CharByteArray;
-    this->IntByteArray = obj.IntByteArray;
-    this->pArr = obj.IntByteArray;
     this->size = obj.size;
+    unsigned char * NewChar = new unsigned char[this->size+1];
+    memcpy(NewChar,obj.CharByteArray,size+1);
+    CharByteArray = NewChar;
+    memcpy(this->IntByteArray,obj.IntByteArray,size);
+    this->pArr = this->IntByteArray;
 }
+
+
+decoder::decoder(decoder && obj){
+    this->size = obj.size;
+    this->IntByteArray = obj.IntByteArray;
+    this->CharByteArray = obj.CharByteArray;
+    this->pArr = obj.IntByteArray;
+}
+
 
 decoder::~decoder(){
     if(CharByteArray)
@@ -22,11 +33,23 @@ decoder::~decoder(){
         delete[] IntByteArray;
 }
 
-decoder& decoder::operator=(const decoder& obj){
-    this->CharByteArray = obj.CharByteArray;
-    this->IntByteArray = obj.IntByteArray;
-    this->pArr = obj.IntByteArray;
+
+decoder& decoder::operator=(decoder && obj){
     this->size = obj.size;
+    this->IntByteArray = obj.IntByteArray;
+    this->CharByteArray = obj.CharByteArray;
+    this->pArr = obj.IntByteArray;
+    return *this;
+}
+
+
+decoder& decoder::operator=(const decoder& obj){
+    this->size = obj.size;
+    unsigned char * NewChar = new unsigned char[this->size+1];
+    memcpy(NewChar,obj.CharByteArray,size+1);
+    CharByteArray = NewChar;
+    memcpy(this->IntByteArray,obj.IntByteArray,size);
+    this->pArr = this->IntByteArray;
     return *this;
 }
 

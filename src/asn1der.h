@@ -6,9 +6,13 @@
 
         decoder(const decoder&);
 
+        decoder(decoder&&);
+
         ~decoder();
 
         decoder& operator=(const decoder&);
+
+        decoder& operator=(decoder&&);
 
         char * decode(const unsigned char * ,unsigned long);
 
