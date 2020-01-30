@@ -1,27 +1,25 @@
-#include <iostream>
-#include "string.h"
-
-#define ENDOFARRAY -1
-
-#define INTEGER 0x02
-#define OCTET_STRING 0x04
-#define OBJECT_IDENTIFIER 0x06
-#define SEQUENCE 0x30
-
-#define SETBIT(number,bit) ((number) |= (pow(2,bit)))
-#define CHECKBIT(number,bit) ((number) & (1 << (bit)))
- 
-class decoder{
+#ifndef DECODER_H
+#define DECODER_H
+ class decoder{
     public:
         decoder();
 
+        decoder(const decoder&);
+
         ~decoder();
 
-        char * decode(const unsigned char * ,int,char * cipherT = nullptr, char * Other = nullptr);
+        decoder& operator=(const decoder&);
 
-        void decode64(const char * ,char * cipherT = nullptr, char * Other = nullptr);
+        char * decode(const unsigned char * ,unsigned long);
 
     private:
+        enum TYPES{
+            ENDOFARRAY = -1,
+            INTEGER = 0x02,
+            OCTET_STRING = 0x04,
+            OBJECT_IDENTIFIER = 0x06,
+            SEQUENCE = 0x30
+        };
         //Calculates number in power
         int pow(int,int);
 
@@ -44,7 +42,7 @@ class decoder{
         void ParseData();
 
         //Appends passed array with new array
-        char * Append(char *,char *);
+        char * Append(char *,const char *);
 
         //Decodes length of front bytes
         int ParseLength(int);
@@ -80,5 +78,6 @@ class decoder{
         char * Result = new char[1]{};
 
         //Size of IntByteArray
-        int size = 0;
+        unsigned long size = 0;
 };
+#endif

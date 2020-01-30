@@ -1,8 +1,19 @@
 #include "asn1der.h"
+#include <iostream>
+#include <cstring>
+
+#define SETBIT(number,bit) ((number) |= (pow(2,bit)))
+#define CHECKBIT(number,bit) ((number) & (1 << (bit)))
 
 decoder::decoder(){
 }
 
+decoder::decoder(const decoder& obj){
+    this->CharByteArray = obj.CharByteArray;
+    this->IntByteArray = obj.IntByteArray;
+    this->pArr = obj.IntByteArray;
+    this->size = obj.size;
+}
 
 decoder::~decoder(){
     if(CharByteArray)
@@ -11,12 +22,19 @@ decoder::~decoder(){
         delete[] IntByteArray;
 }
 
+decoder& decoder::operator=(const decoder& obj){
+    this->CharByteArray = obj.CharByteArray;
+    this->IntByteArray = obj.IntByteArray;
+    this->pArr = obj.IntByteArray;
+    this->size = obj.size;
+    return *this;
+}
 
-char * decoder::Append(char * dst,char * src){  
-     int dstlen = strlen(dst),srclen =  strlen(src);
-     char* temp = new char[dstlen+srclen+1]{};
+char * decoder::Append(char * dst,const char * src){  
+     unsigned long dstlen = strlen(dst),srclen =  strlen(src);
+     char* temp = new char[dstlen+srclen+1];
      memcpy(temp, dst, dstlen);
-     strcat(temp,src);
+     memcpy(temp + dstlen, src, srclen + 1);
      delete[] dst;
      return temp;
 }
@@ -24,17 +42,15 @@ char * decoder::Append(char * dst,char * src){
 
 const unsigned char *  decoder::NewArr(const unsigned char* arr) {
     unsigned char * temp = new unsigned char[size+1]{};
-    for(int i = 0;i < size;++i){
-        temp[i] = arr[i];
-    }
+    memcpy(temp,arr,size+1);
     return temp;
 }
 
 
 void decoder::ToIntArray(){
     IntByteArray = new int[size+1]{};
-    for(int i = 0;i<size;++i){
-        IntByteArray[i] = (unsigned int)CharByteArray[i];
+    for(unsigned int i = 0;i<size;++i){
+        IntByteArray[i] = static_cast<unsigned int>(CharByteArray[i]);
     }
     IntByteArray[size] = -1;
     pArr = IntByteArray;
@@ -57,12 +73,12 @@ void decoder::ParseData(){
         case OBJECT_IDENTIFIER:
             ObjectIdentifierHandler();
             ParseData();
-            Result = Append(Result,const_cast<char *>("}"));
+            Result = Append(Result,("}"));
             break;
         case SEQUENCE:
             SequenceHandler();
             ParseData();
-            Result = Append(Result,const_cast<char *>("\n}"));
+            Result = Append(Result,("\n}"));
             break;
         default:
             break;
@@ -70,8 +86,10 @@ void decoder::ParseData(){
 }
 
 
-char * decoder::decode(const unsigned char * Text,int length,char * cipherT, char * Other){
-    size = length;
+char * decoder::decode(const unsigned char * Text,long unsigned length){
+      size = length;
+      if(CharByteArray)
+        delete[] CharByteArray;
       CharByteArray = NewArr(Text);
       ToIntArray();
       try{
@@ -95,9 +113,10 @@ int decoder::pow(int num, int times){
     if(times == 0)
         return 1;
     if(times == 1)
-        return 2;
+        return num;
     if(times > 1)
         return num*pow(num,--times);
+    return -1;
 }
 
 
@@ -125,18 +144,18 @@ void decoder::CalculateIdentifierFirstByte(){ //there are only three types of fi
         if(*pArr == -1 )
             throw "CalculateIndentifierFirstByte error";
 
-        Result = Append(Result,const_cast<char *>((std::to_string(1) + ".").c_str()));
-        Result = Append(Result,const_cast<char *>((std::to_string(*pArr-40)+ ".").c_str())); //if first node is 1 the second node is : number - (firstnode * 40)
+        Result = Append(Result,(std::to_string(1) + ".").c_str());
+        Result = Append(Result,(std::to_string(*pArr-40)+ ".").c_str()); //if first node is 1 the second node is : number - (firstnode * 40)
         return;
     }else if (*pArr < 120) //means that first node is 2
     {
-        Result = Append(Result,const_cast<char *>((std::to_string(2) + ".").c_str()));
-        Result = Append(Result,const_cast<char *>((std::to_string(*pArr-80)+ ".").c_str())); //if first node is 1 the second node is : number - (firstnode * 40)
+        Result = Append(Result,(std::to_string(2) + ".").c_str());
+        Result = Append(Result,(std::to_string(*pArr-80)+ ".").c_str()); //if first node is 1 the second node is : number - (firstnode * 40)
         return;
     }else // first node is 3
     {
-        Result = Append(Result,const_cast<char *>((std::to_string(3) + ".").c_str()));
-        Result = Append(Result,const_cast<char *>((std::to_string(*pArr-120)+ ".").c_str()));
+        Result = Append(Result,(std::to_string(3) + ".").c_str());
+        Result = Append(Result,(std::to_string(*pArr-120)+ ".").c_str());
         return;
     }
 }
@@ -176,10 +195,10 @@ void decoder::CalculateIdentifier(int len){
         if(*pArr == -1 || *(pArr+1) == -1)
             throw "CalculateIndentifier error";
         if(!CHECKBIT(*pArr,7)){ //if decimal number consists of only one byte
-            Result = Append(Result,const_cast<char *>((std::to_string(*pArr) + ".").c_str()));
+            Result = Append(Result,(std::to_string(*pArr) + ".").c_str());
         }else //if bit 7 is set it means that length of decimal number in bytes is bigger than one byte
         {
-            Result = Append(Result,const_cast<char *>((std::to_string(CalculateLongSID(i)) + ".").c_str()));
+            Result = Append(Result,(std::to_string(CalculateLongSID(i)) + ".").c_str());
         }
     }
 }
@@ -187,77 +206,11 @@ void decoder::CalculateIdentifier(int len){
 
 char * decoder::IntToHexChar(int number){
     char * hex = new char[3]{};
+    char hexarr[] = "0123456789ABCDEF";
     int num = number/16;
-    for(int i = 0;i < 2;++i)
-    switch (num)
-    {
-    case 15:
-        hex[i] = 'F';
-        num = number%16;
-        break;
-    case 14:
-        hex[i] = 'E';
-        num = number%16;
-        break;
-    case 13:
-        hex[i] = 'D';
-        num = number%16;
-        break;
-    case 12:
-        hex[i] = 'C';
-        num = number%16;
-        break;
-    case 11:
-        hex[i] = 'B';
-        num = number%16;
-        break;
-    case 10:
-        hex[i] = 'A';
-        num = number%16;
-        break;
-    case 9:
-        hex[i] = '9';
-        num = number%16;
-        break;
-    case 8:
-        hex[i] = '8';
-        num = number%16;
-        break;
-    case 7:
-        hex[i] = '7';
-        num = number%16;
-        break;
-    case 6:
-        hex[i] = '6';
-        num = number%16;
-        break;
-    case 5:
-        hex[i] = '5';
-        num = number%16;
-        break;
-    case 4:
-        hex[i] = '4';
-        num = number%16;
-        break;
-    case 3:
-        hex[i] = '3';
-        num = number%16;
-        break;
-    case 2:
-        hex[i] = '2';
-        num = number%16;
-        break;
-    case 1:
-        hex[i] = '1';
-        num = number%16;
-        break;
-    case 0:
-        hex[i] = '0';
-        num = number%16;
-        break;
-    default:
-        break;
-    }
+    hex[0] = hexarr[num];
+    num = number%16;
+    hex[1] = hexarr[num];
     return hex;
 }
 
@@ -276,16 +229,16 @@ void decoder::OctetStringHandler(){
         if(*pArr == -1 )
             throw "IntegerHandler error";
 
-        Result = Append(Result,const_cast<char *>(" Octet String : { "));
+        Result = Append(Result," Octet String : { ");
         AppendOctetString(ParseLength(*pArr));
-        Result = Append(Result,const_cast<char *>("}"));
+        Result = Append(Result,"}");
     }
     ++pArr;
 }
 
 
 void decoder::ObjectIdentifierHandler(){
-    Result = Append(Result,const_cast<char *>(" OBJECT INDENTIFIED WITH VALUE: { "));
+    Result = Append(Result," OBJECT INDENTIFIED WITH VALUE: { ");
     if(!CHECKBIT(*++pArr,7)){ //if length in one byte
 
         if(*pArr == -1 )
@@ -298,7 +251,6 @@ void decoder::ObjectIdentifierHandler(){
         CalculateIdentifierFirstByte();
         CalculateIdentifier(ParseLength(*pArr));
     }
-    std::cout << "IT IS :" <<  *pArr;
     ++pArr;
 }
 
@@ -309,13 +261,13 @@ void decoder::IntegerHandler(){
         if(*pArr == -1 )
             throw "IntegerHandler error";
 
-        Result = Append(Result,const_cast<char *>(" INTEGER WITH VALUE: { "));
-        Result = Append(Result, const_cast<char *>((std::to_string(CalculateBytes(ParseLength(*pArr)))+ " }").c_str()));
+        Result = Append(Result," INTEGER WITH VALUE: { ");
+        Result = Append(Result, ((std::to_string(CalculateBytes(ParseLength(*pArr)))+ " }").c_str()));
     }
     else
     {
-        Result = Append(Result,const_cast<char *>(" INTEGER WITH VALUE: { "));
-        Result = Append(Result, const_cast<char *>((std::to_string(CalculateBytes(CalculateBytes(ParseLength(*pArr))))+ " }").c_str()));
+        Result = Append(Result," INTEGER WITH VALUE: { ");
+        Result = Append(Result, (std::to_string(CalculateBytes(CalculateBytes(ParseLength(*pArr))))+ " }").c_str());
     }
     ++pArr;
 }
@@ -327,18 +279,14 @@ void decoder::SequenceHandler(){
             if(*pArr == -1 )
                 throw "SequenceHandler error";
 
-            Result = Append(Result,const_cast<char *>(" SEQUENCE WITH LENGTH: "));
-            Result = Append(Result, const_cast<char *>((std::to_string(*pArr) + "{ \n\t").c_str()));
+            Result = Append(Result," SEQUENCE WITH LENGTH: ");
+            Result = Append(Result, (std::to_string(*pArr) + "{ \n\t").c_str());
       }
     else
     {
-        Result = Append(Result,const_cast<char *>(" SEQUENCE WITH LENGTH: "));
-        Result = Append(Result, const_cast<char *>((std::to_string(CalculateBytes(ParseLength(*pArr)))+ "\n\t").c_str()));
+        Result = Append(Result," SEQUENCE WITH LENGTH: ");
+        Result = Append(Result, (std::to_string(CalculateBytes(ParseLength(*pArr)))+ "\n\t").c_str());
     }
     ++pArr;
 }
 
-
-void decoder::decode64(const char * Text,char * cipherT, char * Other){
-    
-}
