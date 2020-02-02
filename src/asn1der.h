@@ -16,6 +16,7 @@
 
         char * decode(const unsigned char * ,unsigned long);
 
+        char * decode64(const char * );
     private:
         enum TYPES{
             ENDOFARRAY = -1,
@@ -33,6 +34,15 @@
 
         int CalculateLongSID(int&);
 
+        //Calculates length of char array which ends with '\0'
+        unsigned long CalculateCharArrayLength(const char *);
+
+        //Converts Base64 char to decimal number
+        int Base64CharToDec(char );
+
+        //Convert base64 to ASCII
+        void Base64ToASCII(char *);
+
         //Calculates all decimal values of indentifier
         void CalculateIdentifier(int);
 
@@ -46,7 +56,7 @@
         void ParseData();
 
         //Appends passed array with new array
-        char * Append(char *,const char *);
+        void Append(char **,const char *);
 
         //Decodes length of front bytes
         int ParseLength(int);
@@ -67,7 +77,7 @@
         void ToIntArray();
 
         //Copies value of passed array and returns new created one with same values
-        const unsigned char *  NewArr(const unsigned char* );
+        char *  NewArr(const void* ,int );
 
         //Byte array as integers
         int * IntByteArray = nullptr;
@@ -76,12 +86,18 @@
         int * pArr = nullptr;
 
         //Byte array as char
-        const unsigned char * CharByteArray = nullptr;
+        unsigned char * CharByteArray = nullptr;
 
         //The result decoded string
-        char * Result = new char[1]{};
+        char * Result = nullptr;
 
-        //Size of IntByteArray
-        unsigned long size = 0;
+        //Size of CharByteArray
+        unsigned long sizeofascii = 0;
+
+        //Size of Base64CharArray
+        unsigned long sizeof64 = 0;
+
+        //base64 array of chars
+        char Base64Chars[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 };
 #endif
