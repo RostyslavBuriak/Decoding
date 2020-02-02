@@ -11,6 +11,7 @@ decoder::decoder(){
 
 decoder::decoder(const decoder& obj){
     sizeofascii = obj.sizeofascii;
+    sizeof64 = obj.sizeof64;
     unsigned char * NewChar = new unsigned char[sizeofascii+1];
     memcpy(NewChar,obj.CharByteArray,sizeofascii+1);
     CharByteArray = NewChar;
@@ -24,6 +25,7 @@ decoder::decoder(const decoder& obj){
 
 decoder::decoder(decoder && obj){
     sizeofascii = obj.sizeofascii;
+    sizeof64 = obj.sizeof64;
     IntByteArray = obj.IntByteArray;
     obj.IntByteArray = nullptr;
     CharByteArray = obj.CharByteArray;
@@ -47,6 +49,7 @@ decoder::~decoder(){
 
 decoder& decoder::operator=(decoder && obj){
     sizeofascii = obj.sizeofascii;
+    sizeof64 = obj.sizeof64;
     IntByteArray = obj.IntByteArray;
     obj.IntByteArray = nullptr;
     CharByteArray = obj.CharByteArray;
@@ -61,6 +64,7 @@ decoder& decoder::operator=(decoder && obj){
 
 decoder& decoder::operator=(const decoder& obj){
     sizeofascii = obj.sizeofascii;
+    sizeof64 = obj.sizeof64;
     unsigned char * NewChar = new unsigned char[sizeofascii+1];
     memcpy(NewChar,obj.CharByteArray,sizeofascii+1);
     CharByteArray = NewChar;
@@ -118,12 +122,13 @@ void decoder::ParseData(){
             break;
         case OCTET_STRING:
             OctetStringHandler();
+            Append(&Result,("}\n"));
             ParseData();
             break;
         case OBJECT_IDENTIFIER:
             ObjectIdentifierHandler();
+            Append(&Result,("}\n"));
             ParseData();
-            Append(&Result,("}"));
             break;
         case SEQUENCE:
             SequenceHandler();
@@ -166,9 +171,6 @@ char * decoder::decode64(const char * Text){
      if(IntByteArray == nullptr){
          ToIntArray();
      }
-     for(int i = 0;IntByteArray[i] != -1;++i){
-         std::cout << IntByteArray[i] << std::endl;
-     }
     try{
         ParseData();
     }
@@ -199,20 +201,11 @@ void decoder::Base64ToASCII(char * base64){
         }
         ch = ch << offset;
         for(int q = 0;q < offset;++i && ++q){
-            //std::cout << base64[(i+6)/8] << " " << (i+6)%8  << " " << i << std::endl;
             if(CHECKBIT(Base64CharToDec(base64[(i+6)/8]),(i+6)%8))
                 SETBIT(ch,q);
         }
         --i;
-        if(offset == 2)
-            offset = 4;
-        else if(offset == 4)
-            offset = 6;
-        else
-        {
-            offset = 2;
-            i+=8;
-        }
+        offset == 2? offset = 4 : offset ==4? offset = 6 :offset == 6? offset = 2,i+=8: throw("Base64ToASCII error");
         *pCharByteArray = static_cast<unsigned char>(ch);
         ch = 0;
     }
